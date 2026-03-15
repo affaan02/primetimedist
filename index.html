@@ -948,23 +948,23 @@
                         <div className="space-y-3 bg-gray-50 p-4 rounded-2xl border border-gray-200">
                           <div className="flex justify-between items-center mb-2">
                              <h4 className="text-xs font-bold uppercase tracking-widest text-gray-500">Flavors & Pricing</h4>
-                             <button type="button" onClick={() => setEditingProduct({...editingProduct, variants: [...editingProduct.variants, {name: '', stock: '', price: ''}]})} className="text-[10px] font-bold uppercase tracking-widest text-blue-600 bg-blue-100 px-3 py-1.5 rounded-lg">+ Add</button>
+                             <button type="button" onClick={() => setEditingProduct({...editingProduct, variants: [...editingProduct.variants, {name: '', stock: '', price: ''}]})} className="text-xs font-bold uppercase tracking-widest text-blue-600 bg-blue-100 px-4 py-2 rounded-xl">+ Add</button>
                           </div>
                           {editingProduct.variants.map((v, i) => (
-                            <div key={i} className="flex gap-2 items-center bg-white p-2 rounded-xl shadow-sm border border-gray-100">
-                               <input placeholder="Flavor Name" className="w-2/5 p-2 text-sm outline-none bg-transparent font-bold" value={v.name} onChange={e => {
+                            <div key={i} className="flex items-center bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                               <input placeholder="Flavor Name" className="flex-1 px-4 py-4 text-sm outline-none bg-transparent font-bold min-w-0" value={v.name} onChange={e => {
                                   const newV = [...editingProduct.variants]; newV[i].name = e.target.value; setEditingProduct({...editingProduct, variants: newV});
                                }} />
-                               <input placeholder="Price" type="number" step="0.01" className="w-1/4 p-2 text-sm outline-none bg-transparent border-l border-gray-100" value={v.price} onChange={e => {
+                               <input placeholder="Price" type="number" step="0.01" className="w-20 px-3 py-4 text-sm outline-none bg-transparent border-l border-gray-100 text-center" value={v.price} onChange={e => {
                                   const newV = [...editingProduct.variants]; newV[i].price = e.target.value; setEditingProduct({...editingProduct, variants: newV});
                                }} />
-                               <input placeholder="Qty" type="number" className="w-1/4 p-2 text-sm outline-none bg-transparent border-l border-gray-100" value={v.stock} onChange={e => {
+                               <input placeholder="Qty" type="number" className="w-16 px-3 py-4 text-sm outline-none bg-transparent border-l border-gray-100 text-center" value={v.stock} onChange={e => {
                                   const newV = [...editingProduct.variants]; newV[i].stock = e.target.value; setEditingProduct({...editingProduct, variants: newV});
                                }} />
                                <button type="button" onClick={() => {
                                   const newV = editingProduct.variants.filter((_, idx) => idx !== i);
                                   setEditingProduct({...editingProduct, variants: newV.length ? newV : [{name:'', stock:'', price:''}]});
-                               }} className="w-8 h-8 text-red-400 hover:text-red-600 flex items-center justify-center shrink-0 bg-red-50 rounded-lg"><Trash2 size={14}/></button>
+                               }} className="w-12 h-12 text-red-400 flex items-center justify-center shrink-0 bg-red-50 border-l border-gray-100"><Trash2 size={16}/></button>
                             </div>
                           ))}
                         </div>
@@ -1064,23 +1064,23 @@
                           <div className="space-y-3 bg-gray-50 p-4 rounded-2xl border border-gray-200">
                             <div className="flex justify-between items-center mb-2">
                                <h4 className="text-xs font-bold uppercase tracking-widest text-gray-500">Flavors & Pricing</h4>
-                               <button type="button" onClick={() => setNewProduct({...newProduct, variants: [...newProduct.variants, {name: '', stock: '', price: ''}]})} className="text-[10px] font-bold uppercase tracking-widest text-blue-600 bg-blue-100 px-3 py-1.5 rounded-lg">+ Add</button>
+                               <button type="button" onClick={() => setNewProduct({...newProduct, variants: [...newProduct.variants, {name: '', stock: '', price: ''}]})} className="text-xs font-bold uppercase tracking-widest text-blue-600 bg-blue-100 px-4 py-2 rounded-xl">+ Add</button>
                             </div>
                             {newProduct.variants.map((v, i) => (
-                              <div key={i} className="flex gap-2 items-center bg-white p-2 rounded-xl shadow-sm border border-gray-100">
-                                 <input placeholder="Flavor Name" className="w-2/5 p-2 text-sm outline-none bg-transparent font-bold" value={v.name} onChange={e => {
+                              <div key={i} className="flex items-center bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                                 <input placeholder="Flavor Name" className="flex-1 px-4 py-4 text-sm outline-none bg-transparent font-bold min-w-0" value={v.name} onChange={e => {
                                     const newV = [...newProduct.variants]; newV[i].name = e.target.value; setNewProduct({...newProduct, variants: newV});
                                  }} />
-                                 <input placeholder="Price" type="number" step="0.01" className="w-1/4 p-2 text-sm outline-none bg-transparent border-l border-gray-100" value={v.price} onChange={e => {
+                                 <input placeholder="Price" type="number" step="0.01" className="w-20 px-3 py-4 text-sm outline-none bg-transparent border-l border-gray-100 text-center" value={v.price} onChange={e => {
                                     const newV = [...newProduct.variants]; newV[i].price = e.target.value; setNewProduct({...newProduct, variants: newV});
                                  }} />
-                                 <input placeholder="Qty" type="number" className="w-1/4 p-2 text-sm outline-none bg-transparent border-l border-gray-100" value={v.stock} onChange={e => {
+                                 <input placeholder="Qty" type="number" className="w-16 px-3 py-4 text-sm outline-none bg-transparent border-l border-gray-100 text-center" value={v.stock} onChange={e => {
                                     const newV = [...newProduct.variants]; newV[i].stock = e.target.value; setNewProduct({...newProduct, variants: newV});
                                  }} />
                                  <button type="button" onClick={() => {
                                     const newV = newProduct.variants.filter((_, idx) => idx !== i);
                                     setNewProduct({...newProduct, variants: newV.length ? newV : [{name:'', stock:'', price:''}]});
-                                 }} className="w-8 h-8 text-red-400 hover:text-red-600 flex items-center justify-center shrink-0 bg-red-50 rounded-lg"><Trash2 size={14}/></button>
+                                 }} className="w-12 h-12 text-red-400 flex items-center justify-center shrink-0 bg-red-50 border-l border-gray-100"><Trash2 size={16}/></button>
                               </div>
                             ))}
                           </div>
