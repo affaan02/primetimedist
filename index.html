@@ -544,16 +544,23 @@
                       <h2 className="font-black text-2xl mb-1 text-gray-900 leading-tight">{selectedProduct.name}</h2>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">{selectedProduct.category}</p>
                       
-                      {/* Product Option Variants Dropdown */}
+                      {/* Product Option Variants — Spreadsheet Rows */}
                       {isVariantMode && (
                         <div className="mb-6 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Select Flavor / Color</label>
-                          <select className="w-full p-3 border border-gray-200 rounded-xl text-sm font-bold outline-none bg-white focus:ring-2 ring-black appearance-none"
-                            value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)}>
-                            {selectedProduct.variants.map((v, i) => (
-                               <option key={i} value={v.name}>{v.name} - {v.stock > 0 ? `${v.stock} Available` : 'Sold Out'}</option>
-                            ))}
-                          </select>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Select Flavor / Color</p>
+                          <div className="space-y-2">
+                            {selectedProduct.variants.map((v, i) => {
+                              const isSelected = selectedOption === v.name;
+                              return (
+                                <div key={i} onClick={() => v.stock > 0 && setSelectedOption(v.name)}
+                                  className={`flex items-center bg-white rounded-2xl border overflow-hidden transition-all ${v.stock <= 0 ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer active:scale-[0.99]'} ${isSelected ? 'border-black shadow-md' : 'border-gray-100 shadow-sm'}`}>
+                                  <span className={`flex-1 px-4 py-4 text-sm font-bold min-w-0 truncate ${isSelected ? 'text-black' : 'text-gray-700'}`}>{v.name}</span>
+                                  <span className="w-20 px-3 py-4 text-sm text-center border-l border-gray-100 font-bold text-gray-800">${Number(v.price).toFixed(2)}</span>
+                                  <span className={`w-20 px-3 py-4 text-sm text-center border-l border-gray-100 font-bold ${v.stock > 0 ? 'text-green-600' : 'text-red-400'}`}>{v.stock > 0 ? `${v.stock}` : 'Out'}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
                       
