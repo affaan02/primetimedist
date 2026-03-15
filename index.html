@@ -560,7 +560,14 @@
                                   <div className="flex items-center border-l border-gray-100 shrink-0">
                                     <button type="button" disabled={v.stock <= 0} onClick={() => setVariantQtys({...variantQtys, [v.name]: Math.max(0, qty - 1)})}
                                       className="w-10 h-12 flex items-center justify-center font-black text-gray-500 active:bg-gray-100 disabled:opacity-30">−</button>
-                                    <span className={`w-8 text-center text-sm font-black ${hasQty ? 'text-black' : 'text-gray-300'}`}>{qty}</span>
+                                    <input type="number" min="0" max={v.stock} disabled={v.stock <= 0}
+                                      value={qty === 0 ? '' : qty}
+                                      placeholder="0"
+                                      onChange={e => {
+                                        const val = parseInt(e.target.value) || 0;
+                                        setVariantQtys({...variantQtys, [v.name]: Math.min(Math.max(0, val), v.stock)});
+                                      }}
+                                      className="w-10 text-center text-sm font-black bg-transparent outline-none disabled:opacity-30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                     <button type="button" disabled={v.stock <= 0 || qty >= v.stock} onClick={() => setVariantQtys({...variantQtys, [v.name]: qty + 1})}
                                       className="w-10 h-12 flex items-center justify-center font-black text-gray-500 active:bg-gray-100 disabled:opacity-30">+</button>
                                   </div>
