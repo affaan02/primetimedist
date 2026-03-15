@@ -492,31 +492,29 @@
           // Variant / Flavor tracking for the modal
           const [selectedOption, setSelectedOption] = useState('');
           const [modalQty, setModalQty] = useState(1);
-          
+          const [variantQtys, setVariantQtys] = useState({});
+
           let filteredProducts = products;
           if (currentCategory) {
             filteredProducts = filteredProducts.filter(p => p.category === currentCategory);
           }
-          filteredProducts = filteredProducts.filter(p => 
-            p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          filteredProducts = filteredProducts.filter(p =>
+            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.category.toLowerCase().includes(searchQuery.toLowerCase())
           );
 
           // Get active product's available options based on the new schema
           const isVariantMode = selectedProduct?.hasVariants && selectedProduct?.variants?.length > 0;
-          const activeVariant = isVariantMode ? selectedProduct.variants.find(v => v.name === selectedOption) : null;
-          
-          const currentPrice = activeVariant ? activeVariant.price : selectedProduct?.price;
-          const currentStock = activeVariant ? activeVariant.stock : selectedProduct?.stock;
+          const currentPrice = selectedProduct?.price;
+          const currentStock = isVariantMode
+            ? selectedProduct.variants.reduce((s, v) => s + v.stock, 0)
+            : selectedProduct?.stock;
 
           const openProductModal = (p) => {
             setSelectedProduct(p);
             setModalQty(1);
-            if (p.hasVariants && p.variants?.length > 0) {
-               setSelectedOption(p.variants[0].name);
-            } else {
-               setSelectedOption('');
-            }
+            setSelectedOption('');
+            setVariantQtys({});
           };
 
           return (
@@ -544,19 +542,28 @@
                       <h2 className="font-black text-2xl mb-1 text-gray-900 leading-tight">{selectedProduct.name}</h2>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">{selectedProduct.category}</p>
                       
-                      {/* Product Option Variants — Spreadsheet Rows */}
+                      {/* Product Option Variants — Per-flavor qty steppers */}
                       {isVariantMode && (
                         <div className="mb-6 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Select Flavor / Color</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Choose Flavors & Quantities</p>
                           <div className="space-y-2">
                             {selectedProduct.variants.map((v, i) => {
-                              const isSelected = selectedOption === v.name;
+                              const qty = variantQtys[v.name] || 0;
+                              const hasQty = qty > 0;
                               return (
-                                <div key={i} onClick={() => v.stock > 0 && setSelectedOption(v.name)}
-                                  className={`flex items-center bg-white rounded-2xl border overflow-hidden transition-all ${v.stock <= 0 ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer active:scale-[0.99]'} ${isSelected ? 'border-black shadow-md' : 'border-gray-100 shadow-sm'}`}>
-                                  <span className={`flex-1 px-4 py-4 text-sm font-bold min-w-0 truncate ${isSelected ? 'text-black' : 'text-gray-700'}`}>{v.name}</span>
-                                  <span className="w-20 px-3 py-4 text-sm text-center border-l border-gray-100 font-bold text-gray-800">${Number(v.price).toFixed(2)}</span>
-                                  <span className={`w-20 px-3 py-4 text-sm text-center border-l border-gray-100 font-bold ${v.stock > 0 ? 'text-green-600' : 'text-red-400'}`}>{v.stock > 0 ? `${v.stock}` : 'Out'}</span>
+                                <div key={i} className={`flex items-center bg-white rounded-2xl border overflow-hidden transition-all ${v.stock <= 0 ? 'opacity-40' : ''} ${hasQty ? 'border-black shadow-md' : 'border-gray-100 shadow-sm'}`}>
+                                  <div className="flex-1 px-4 py-3 min-w-0">
+                                    <span className={`text-sm font-bold truncate block ${hasQty ? 'text-black' : 'text-gray-700'}`}>{v.name}</span>
+                                    <span className="text-xs text-gray-400 font-bold">${Number(v.price).toFixed(2)}</span>
+                                  </div>
+                                  <span className={`px-3 text-xs font-bold border-l border-gray-100 ${v.stock > 0 ? 'text-green-600' : 'text-red-400'}`}>{v.stock > 0 ? `${v.stock} avail` : 'Out'}</span>
+                                  <div className="flex items-center border-l border-gray-100 shrink-0">
+                                    <button type="button" disabled={v.stock <= 0} onClick={() => setVariantQtys({...variantQtys, [v.name]: Math.max(0, qty - 1)})}
+                                      className="w-10 h-12 flex items-center justify-center font-black text-gray-500 active:bg-gray-100 disabled:opacity-30">−</button>
+                                    <span className={`w-8 text-center text-sm font-black ${hasQty ? 'text-black' : 'text-gray-300'}`}>{qty}</span>
+                                    <button type="button" disabled={v.stock <= 0 || qty >= v.stock} onClick={() => setVariantQtys({...variantQtys, [v.name]: qty + 1})}
+                                      className="w-10 h-12 flex items-center justify-center font-black text-gray-500 active:bg-gray-100 disabled:opacity-30">+</button>
+                                  </div>
                                 </div>
                               );
                             })}
@@ -573,29 +580,52 @@
                     </div>
 
                     {/* Sticky Footer */}
-                    <div className="p-6 pt-4 border-t border-gray-50 bg-white shrink-0 flex items-center justify-between">
+                    <div className="p-6 pt-4 border-t border-gray-50 bg-white shrink-0">
                       {activeUser ? (
+                        isVariantMode ? (() => {
+                          const totalQty = Object.values(variantQtys).reduce((s, q) => s + q, 0);
+                          const totalPrice = selectedProduct.variants.reduce((s, v) => s + (v.price * (variantQtys[v.name] || 0)), 0);
+                          const hasSelections = totalQty > 0;
+                          return (
+                            <div className="flex items-center justify-between gap-4 w-full">
+                              <div className="flex flex-col">
+                                <span className="font-black text-2xl text-black">${totalPrice.toFixed(2)}</span>
+                                <span className="text-[10px] text-gray-400 font-bold uppercase">{hasSelections ? `${totalQty} units selected` : 'Select quantities above'}</span>
+                              </div>
+                              <button onClick={() => {
+                                if (!hasSelections) return;
+                                selectedProduct.variants.forEach(v => {
+                                  const q = variantQtys[v.name] || 0;
+                                  if (q > 0) addToCart(selectedProduct, v.name, q, v.price);
+                                });
+                                setVariantQtys({});
+                                showToast(`Added ${totalQty} units to cart!`);
+                              }} disabled={!hasSelections} className={`${hasSelections ? 'bg-black' : 'bg-gray-200 cursor-not-allowed'} text-white px-6 py-3.5 rounded-xl font-black uppercase tracking-widest text-xs active:scale-95 transition-all`}>
+                                Add All
+                              </button>
+                            </div>
+                          );
+                        })() : (
                         <div className="flex items-center justify-between gap-4 w-full">
                            <div className="flex flex-col">
                              <span className="font-black text-2xl text-black">${(Number(currentPrice) * modalQty).toFixed(2)}</span>
-                             {isVariantMode && <span className="text-[10px] text-gray-500 font-bold uppercase truncate max-w-[100px]">{selectedOption}</span>}
                            </div>
                            <div className="flex items-center gap-3">
-                              {/* Modal Qty Selector */}
                               <div className="flex items-center bg-gray-100 rounded-xl p-1 shrink-0">
                                  <button onClick={() => setModalQty(Math.max(1, modalQty - 1))} className="w-8 h-8 flex items-center justify-center font-black bg-white rounded-lg shadow-sm text-gray-600 active:scale-95">-</button>
                                  <span className="font-bold text-sm w-6 text-center">{modalQty}</span>
                                  <button onClick={() => setModalQty(modalQty + 1)} className="w-8 h-8 flex items-center justify-center font-black bg-white rounded-lg shadow-sm text-gray-600 active:scale-95">+</button>
                               </div>
-                              <button onClick={() => { 
-                                  addToCart(selectedProduct, selectedOption, modalQty, currentPrice); 
-                                  setModalQty(1); // Reset qty after adding
-                                  showToast(`Added ${modalQty} ${selectedOption || selectedProduct.name} to cart!`);
+                              <button onClick={() => {
+                                  addToCart(selectedProduct, '', modalQty, currentPrice);
+                                  setModalQty(1);
+                                  showToast(`Added ${modalQty} ${selectedProduct.name} to cart!`);
                               }} disabled={currentStock <= 0} className={`${currentStock > 0 ? 'bg-black hover:bg-gray-800' : 'bg-gray-300 cursor-not-allowed'} text-white px-6 py-3.5 rounded-xl font-black uppercase tracking-widest text-xs active:scale-95 transition-all`}>
                                 {currentStock > 0 ? 'Add' : 'Sold Out'}
                               </button>
                            </div>
                         </div>
+                        )
                       ) : (
                         <button onClick={() => { setView('login'); setSelectedProduct(null); }} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-blue-600/30">
                           Login to View Pricing
