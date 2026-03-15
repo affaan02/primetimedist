@@ -487,6 +487,7 @@
         const ShopView = () => {
           const [searchQuery, setSearchQuery] = useState('');
           const [selectedProduct, setSelectedProduct] = useState(null);
+          const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
           
           // Variant / Flavor tracking for the modal
           const [selectedOption, setSelectedOption] = useState('');
@@ -608,61 +609,113 @@
               </div>
               
               <div className="p-4 -mt-6 relative z-10">
-                {/* SEARCH BAR */}
-                <div className="relative mb-6 shadow-lg rounded-2xl">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400">
-                    <Search />
+                {/* SEARCH BAR + VIEW TOGGLE */}
+                <div className="flex gap-2 mb-6">
+                  <div className="relative flex-1 shadow-lg rounded-2xl">
+                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400">
+                      <Search />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full p-4 pl-12 border border-gray-100 bg-white rounded-2xl text-sm outline-none focus:ring-2 ring-black transition-all"
+                    />
                   </div>
-                  <input 
-                    type="text" 
-                    placeholder="Search products..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full p-4 pl-12 border border-gray-100 bg-white rounded-2xl text-sm outline-none focus:ring-2 ring-black transition-all"
-                  />
+                  <div className="flex bg-white border border-gray-100 rounded-2xl shadow-lg overflow-hidden shrink-0">
+                    <button onClick={() => setViewMode('grid')} className={`px-3 flex items-center justify-center transition-colors ${viewMode === 'grid' ? 'bg-black text-white' : 'text-gray-400'}`}>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+                    </button>
+                    <button onClick={() => setViewMode('list')} className={`px-3 flex items-center justify-center transition-colors ${viewMode === 'list' ? 'bg-black text-white' : 'text-gray-400'}`}>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="14" height="2.5" rx="1"/><rect x="1" y="6.75" width="14" height="2.5" rx="1"/><rect x="1" y="11.5" width="14" height="2.5" rx="1"/></svg>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  {filteredProducts.map(p => {
-                     // Check total stock availability if using variants
-                     const isVariantItem = p.hasVariants && p.variants?.length > 0;
-                     const displayStock = isVariantItem ? p.variants.reduce((sum, v) => sum + v.stock, 0) : p.stock;
-                     const displayPrice = isVariantItem ? p.variants[0].price : p.price;
-
-                     return (
-                      <div key={p.id} onClick={() => openProductModal(p)} className="border border-gray-100 rounded-[2rem] p-3 shadow-sm bg-white overflow-hidden transition-all active:scale-[0.98] cursor-pointer relative flex flex-col">
-                        {p.isFeatured && (
-                          <div className="absolute top-4 left-4 z-10 bg-yellow-400 text-white p-1.5 rounded-full shadow-sm"><Star filled /></div>
-                        )}
-                        <div className="aspect-square bg-gray-50 rounded-[1.5rem] mb-3 overflow-hidden shrink-0">
-                          {p.image ? <img src={p.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-200 italic text-[10px]">No Photo</div>}
+                {/* GRID VIEW */}
+                {viewMode === 'grid' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {filteredProducts.map(p => {
+                       const isVariantItem = p.hasVariants && p.variants?.length > 0;
+                       const displayStock = isVariantItem ? p.variants.reduce((sum, v) => sum + v.stock, 0) : p.stock;
+                       const displayPrice = isVariantItem ? p.variants[0].price : p.price;
+                       return (
+                        <div key={p.id} onClick={() => openProductModal(p)} className="border border-gray-100 rounded-[2rem] p-3 shadow-sm bg-white overflow-hidden transition-all active:scale-[0.98] cursor-pointer relative flex flex-col">
+                          {p.isFeatured && (
+                            <div className="absolute top-4 left-4 z-10 bg-yellow-400 text-white p-1.5 rounded-full shadow-sm"><Star filled /></div>
+                          )}
+                          <div className="aspect-square bg-gray-50 rounded-[1.5rem] mb-3 overflow-hidden shrink-0">
+                            {p.image ? <img src={p.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-200 italic text-[10px]">No Photo</div>}
+                          </div>
+                          <div className="flex-1 flex flex-col">
+                            <h4 className="font-bold text-sm text-gray-900 px-1 leading-snug line-clamp-2 mb-1">{p.name}</h4>
+                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 px-1 mt-auto">{p.category}</p>
+                            {activeUser ? (
+                              <div className="flex items-center justify-between px-1">
+                                <span className="font-black text-sm text-black">${Number(displayPrice).toFixed(2)}</span>
+                                <button onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isVariantItem) { openProductModal(p); } else { addToCart(p, '', 1, displayPrice); }
+                                }} className="bg-black text-white w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform"><Plus /></button>
+                              </div>
+                            ) : (
+                              <div className="px-1 mt-auto">
+                                <div className="bg-gray-100 text-gray-500 text-[9px] font-bold uppercase tracking-widest text-center py-2 rounded-xl">Sign in to view</div>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-1 flex flex-col">
-                          <h4 className="font-bold text-sm text-gray-900 px-1 leading-snug line-clamp-2 mb-1">{p.name}</h4>
-                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 px-1 mt-auto">{p.category}</p>
-                          
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* LIST VIEW */}
+                {viewMode === 'list' && (
+                  <div className="space-y-3">
+                    {filteredProducts.map(p => {
+                      const isVariantItem = p.hasVariants && p.variants?.length > 0;
+                      const displayStock = isVariantItem ? p.variants.reduce((sum, v) => sum + v.stock, 0) : p.stock;
+                      const displayPrice = isVariantItem ? p.variants[0].price : p.price;
+                      return (
+                        <div key={p.id} onClick={() => openProductModal(p)} className="flex gap-3 p-4 bg-white rounded-[2rem] border border-gray-100 shadow-sm items-center cursor-pointer active:scale-[0.99] transition-transform">
+                          <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden relative">
+                            {p.isFeatured && <div className="absolute top-1 left-1"><Star filled /></div>}
+                            {p.image ? <img src={p.image} className="w-full h-full object-cover" /> : <span className="text-[8px] italic text-gray-400">No Img</span>}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-sm truncate text-gray-900">{p.name}</h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              {activeUser ? (
+                                <>
+                                  <p className="text-xs font-black text-black">${Number(displayPrice).toFixed(2)}</p>
+                                  <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                  <p className={`text-[10px] font-bold uppercase tracking-widest ${displayStock > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                                    {displayStock > 0 ? `Qty: ${displayStock}` : 'Sold Out'}
+                                  </p>
+                                </>
+                              ) : (
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{p.category}</p>
+                              )}
+                            </div>
+                          </div>
                           {activeUser ? (
-                            <div className="flex items-center justify-between px-1">
-                              <span className="font-black text-sm text-black">${Number(displayPrice).toFixed(2)}</span>
-                              <button onClick={(e) => { 
-                                  e.stopPropagation(); 
-                                  if (isVariantItem) {
-                                    openProductModal(p); // Force modal open to pick flavor
-                                  } else {
-                                    addToCart(p, '', 1, displayPrice);
-                                  }
-                              }} className="bg-black text-white w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform"><Plus /></button>
-                            </div>
+                            <button onClick={(e) => {
+                              e.stopPropagation();
+                              if (isVariantItem) { openProductModal(p); } else { addToCart(p, '', 1, displayPrice); }
+                            }} className="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center shrink-0 active:scale-90 transition-transform">
+                              <Plus />
+                            </button>
                           ) : (
-                            <div className="px-1 mt-auto">
-                              <div className="bg-gray-100 text-gray-500 text-[9px] font-bold uppercase tracking-widest text-center py-2 rounded-xl">Sign in to view</div>
-                            </div>
+                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest shrink-0">Sign in</span>
                           )}
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {filteredProducts.length === 0 && <p className="text-center text-gray-400 py-16 italic text-sm">No products found.</p>}
               </div>
             </div>
